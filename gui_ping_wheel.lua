@@ -30,7 +30,7 @@ end
 local custom_keybind_mode = false                  -- set to true for custom keybind
 
 local pingCommands = {                             -- the options in the ping wheel, displayed clockwise from 12 o'clock
-    { name = "Attack",  color = { 1, 0.5, 0.3, 1 } }, -- color is optional, if no color is chosen it will be white
+    { name = "Attack",  color = { 1, 0.5, 0.3, 1 } }, -- color is optional, if no color is chosen it will be player color
     { name = "Rally",   color = { 0.4, 0.8, 0.4, 1 } },
     { name = "Defend",  color = { 0.7, 0.9, 1, 1 } },
     { name = "Retreat", color = { 0.9, 0.7, 1, 1 } },
@@ -89,7 +89,8 @@ local styleConfig = {
 }
 
 -- On/Off switches
-local player_color_mode = true -- set to false to use default pingWheelColor instead of player color
+local player_color_mode = false -- set to true to make all messages display with player color instead of per-entry colors
+                                -- note you can also set entries with player color by just not setting color for them
 local draw_dividers = true     -- set to false to disable the dividers between options
 local draw_line = false       -- set to true to draw a line from the center to the cursor during selection
 local draw_circle = false      -- set to false to disable the circle around the ping wheel
@@ -116,7 +117,7 @@ local pingWheelTextHighlightColor = { 1, 1, 1, 1 }
 local pingWheelTextSpamColor = { 0.9, 0.9, 0.9, 0.4 }
 local pingWheelPlayerColor = { 0.9, 0.8, 0.5, 0.8 }
 
-local pingWheelColor = { 0.9, 0.8, 0.5, 0.6 }
+local pingWheelColor = { 1, 1, 1, 0.25 }
 ---------------------------------------------------------------
 -- End of params
 
@@ -180,9 +181,6 @@ function widget:Initialize()
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { true }, "pR")
     widgetHandler.actionHandler:AddAction(self, "ping_wheel_on", PingWheelAction, { false }, "r")
     pingWheelPlayerColor = { Spring.GetTeamColor(Spring.GetMyTeamID()) }
-    if player_color_mode then
-        pingWheelColor = pingWheelPlayerColor
-    end
 
     -- set the style from config
     local style = styleConfig[styleChoice]
@@ -321,9 +319,13 @@ function widget:MouseRelease(mx, my, button)
         if pingWheelSelection > 0 then
             --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
             local pingText = pingWheel[pingWheelSelection].name
-            local color = pingWheel[pingWheelSelection].color or pingWheelColor
+            -- Ping with entry color or else let engine use default color (player color for ping, but textchat will be normal color)
+            if pingWheel[pingWheelSelection].color and not player_color_mode then
+                local color = pingWheel[pingWheelSelection].color
+                pingText = colourNames(color[1], color[2], color[3]) .. pingText
+            end
             Spring.MarkerAddPoint(pingWorldLocation[1], pingWorldLocation[2], pingWorldLocation[3],
-                colourNames(color[1], color[2], color[3]) .. pingText, false)
+                pingText, false)
 
             -- Spam control is necessary!
             spamControl = spamControlFrames
@@ -456,7 +458,7 @@ function widget:DrawScreen()
     if keyDown and not displayPingWheel then
         -- draw dot at mouse location
         local mx, my = spGetMouseState()
-        glColor2(pingWheelColor)
+        glColor2(pingWheelPlayerColor)
         glPointSize(centerDotSize)
         glBeginEnd(GL_POINTS, glVertex, mx, my)
         -- draw two hints at the top left and right of the location
@@ -477,8 +479,7 @@ function widget:DrawScreen()
         glTexture(false)
 
         -- draw a smooth circle at the pingWheelScreenLocation with 128 vertices
-        --glColor(pingWheelColor)
-        glColor(1, 1, 1, 0.25)
+        glColor(pingWheelColor)
         glLineWidth(pingWheelThickness)
 
         local function Circle(r)
@@ -494,7 +495,7 @@ function widget:DrawScreen()
         end
 
         -- draw the center dot
-        glColor(pingWheelColor)
+        glColor(pingWheelPlayerColor)
         glPointSize(centerDotSize)
         glBeginEnd(GL_POINTS, glVertex, pingWheelScreenLocation.x, pingWheelScreenLocation.y)
         glPointSize(1)
@@ -544,7 +545,7 @@ function widget:DrawScreen()
         glBeginText()
         if pingWheelSelection ~= 0 then
             local text = pingWheel[pingWheelSelection].name
-            local color = pingWheel[pingWheelSelection].color or textColor
+            local color = pingWheel[pingWheelSelection].color or pingWheelPlayerColor
             color[4] = 1
             if flashBlack then
                 color = { 0, 0, 0, 0 }
@@ -564,7 +565,7 @@ function widget:DrawScreen()
             if i ~= pingWheelSelection or pingWheelSelection == 0 then
                 angle = (i - 1) * 2 * math.pi / #pingWheel
                 local text = pingWheel[i].name
-                local color = pingWheel[i].color or pingWheelTextColor
+                local color = pingWheel[i].color or pingWheelPlayerColor
                 color[4] = 0.75
                 glColor(color)
                 glText(text, pingWheelScreenLocation.x + pingWheelRadius * textAlignRadiusRatio * math.sin(angle),
