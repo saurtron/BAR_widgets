@@ -50,6 +50,8 @@ local pingMessages = {
     { name = "No",       color = { 0, 0, 1, 1 } },
     { name = "OMW",      color = { 0.5, 0, 1, 1 } },
     { name = "For sale", color = { 1, 0, 1, 1 } },
+    -- add (possibly longer) msg attribute to have separate text on the wheel (name) and ping/chat (msg). as follows:
+    -- { name = "Shop Open", msg = "start buying t2; shop open; 440m per each [PAYING IS MANDATORY]", color = { 0.5, 0, 1, 1 } },
 }
 
 local styleChoice = 1 -- 1 = circle, 2 = ring, 3 = custom
@@ -318,7 +320,7 @@ function widget:MouseRelease(mx, my, button)
     then
         if pingWheelSelection > 0 then
             --Spring.Echo("pingWheelSelection: " .. pingWheel[pingWheelSelection].name)
-            local pingText = pingWheel[pingWheelSelection].name
+            local pingText = pingWheel[pingWheelSelection].msg or pingWheel[pingWheelSelection].name
             -- Ping with entry color or else let engine use default color (player color for ping, but textchat will be normal color)
             if pingWheel[pingWheelSelection].color and not player_color_mode then
                 local color = pingWheel[pingWheelSelection].color
