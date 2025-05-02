@@ -289,7 +289,7 @@ function widget:MousePress(mx, my, button)
         -- functionality of mouse build spacing is put in here, sigh
         -- check if alt is pressed
         local alt, ctrl, meta, shift = spGetModKeyState()
-        if (button == 4 or button == 5) and alt then
+        if (button == 4 or button == 5) and (alt or shift) then
             if button == 4 then
                 Spring.SendCommands("buildspacing inc")
             elseif button == 5 then
@@ -578,7 +578,7 @@ function widget:DrawScreen()
         glEndText()
 
         glLineWidth(1)
-        glBlending(false)
+        --glBlending(false)
     end
     glPopMatrix()
 end
